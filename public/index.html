@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Travel AI Assistant</title>
+  
+  <!-- External Libraries -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header Section -->
+    <div class="header">
+      <h1><i class="fas fa-plane"></i> Travel AI Assistant</h1>
+      <p>Asisten perjalanan AI yang siap membantu merencanakan petualangan Anda</p>
+      <div class="ai-status" id="aiStatus">
+        <i class="fas fa-circle"></i>
+        <span>Mengecek status AI...</span>
+      </div>
+    </div>
+
+    <!-- Main Chat Container -->
+    <div class="chat-container">
+      <!-- Chat Messages Area -->
+      <div class="chat-messages" id="chatMessages">
+        <div class="welcome-message">
+          <h3>🌍 Selamat datang di Travel AI Assistant!</h3>
+          <p>Saya siap membantu Anda merencanakan perjalanan yang sempurna. Tanyakan apa saja tentang destinasi, akomodasi, atau tips perjalanan.</p>
+          <div class="quick-suggestions" id="quickSuggestions">
+            <!-- Quick suggestions will be populated by JavaScript -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message Display -->
+      <div class="error-message" id="errorMessage">
+        Terjadi kesalahan saat mengirim pesan. Silakan coba lagi.
+        <button class="retry-btn" onclick="retryLastMessage()">Coba Lagi</button>
+      </div>
+
+      <!-- Input Container -->
+      <div class="input-container">
+        <div class="input-wrapper">
+          <textarea 
+            id="messageInput" 
+            class="input-field" 
+            placeholder="Tanyakan tentang destinasi, akomodasi, atau tips perjalanan..."
+            rows="1"
+          ></textarea>
+          <button 
+            class="send-btn" 
+            id="sendBtn" 
+            onclick="sendMessage()" 
+            aria-label="Kirim pesan" 
+            title="Kirim pesan"
+          >
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="/js/config.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
