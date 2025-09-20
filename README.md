@@ -23,7 +23,7 @@ Bayangkan memiliki asisten perjalanan pribadi yang siap 24/7. Itulah **Travel Ch
 <details>
   <summary><strong>👀 Lihat Contoh Aksi</strong></summary>
   <br>
-  <img src="https://i.imgur.com/e8a2f8a.gif" alt="Demo GIF" width="100%"/>
+  <img width="834" height="920" alt="image" src="https://github.com/user-attachments/assets/e1716518-9e30-4db7-9b67-090a91018db3" />
   <br>
   <p align="center"><em>Dapatkan rekomendasi, itinerary, dan estimasi budget dalam hitungan detik!</em></p>
 </details>
