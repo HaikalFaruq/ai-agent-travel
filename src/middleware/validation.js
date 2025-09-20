@@ -4,6 +4,14 @@ import { logger } from '../utils/logger.js';
 
 export const validateChatMessage = [
   body('prompt')
+    .customSanitizer((value) => {
+      if (typeof value !== 'string') return value;
+      return value
+        .replace(/<script\b[^<]*(?:(?!<\/?script>)<[^<]*)*<\/script>/gi, '')
+        .replace(/<iframe\b[^<]*(?:(?!<\/?iframe>)<[^<]*)*<\/iframe>/gi, '')
+        .replace(/javascript:/gi, '')
+        .replace(/on\w+\s*=/gi, '');
+    })
     .trim()
     .notEmpty()
     .withMessage('Prompt is required')
@@ -23,7 +31,8 @@ export const validateChatMessage = [
       });
       
       const errorMessages = errors.array().map(error => error.msg);
-      throw new ValidationError(`Validation failed: ${errorMessages.join(', ')}`);
+      const validationError = new ValidationError(`Validation failed: ${errorMessages.join(', ')}`);
+      return next(validationError);
     }
     
     next();
@@ -34,8 +43,8 @@ export const sanitizeInput = (req, res, next) => {
   if (req.body.prompt) {
     // Remove potential script tags and dangerous content
     req.body.prompt = req.body.prompt
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+      .replace(/<script\b[^<]*(?:(?!<\/?script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/<iframe\b[^<]*(?:(?!<\/?iframe>)<[^<]*)*<\/iframe>/gi, '')
       .replace(/javascript:/gi, '')
       .replace(/on\w+\s*=/gi, '')
       .trim();

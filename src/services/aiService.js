@@ -12,12 +12,19 @@ class AIService {
   }
 
   async initialize() {
+    // Skip initialization in test environment
+    if (process.env.NODE_ENV === 'test') {
+      this.isInitialized = true;
+      return;
+    }
+
     try {
-      // For Gemini 2.5 models, use simpler initialization test
-      const testContent = config.ai.model.includes('2.5') ? 
-        { contents: [{ role: "user", parts: [{ text: "Hello" }] }] } :
-        { contents: [{ role: "user", parts: [{ text: "test" }] }], generationConfig: { maxOutputTokens: 1 } };
-      
+      // For Gemini models, use simpler initialization test
+      const testContent = {
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
+        generationConfig: { maxOutputTokens: 1 }
+      };
+
       // Test the connection with retry mechanism
       let lastError;
       for (let attempt = 1; attempt <= 3; attempt++) {
@@ -28,15 +35,18 @@ class AIService {
           lastError = error;
           if (attempt < 3) {
             logger.warn(`AI initialization attempt ${attempt} failed, retrying...`, { error: error.message });
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Progressive delay
+
+            // If it's a quota error, wait longer
+            const waitTime = error.message.includes('quota') ? 15000 : 1000 * attempt;
+            await new Promise(resolve => setTimeout(resolve, waitTime));
           }
         }
       }
-      
+
       if (lastError && lastError.message) {
         throw lastError;
       }
-      
+
       this.isInitialized = true;
       logger.info('AI Service initialized successfully', {
         model: config.ai.model
@@ -44,6 +54,16 @@ class AIService {
     } catch (error) {
       logger.error('Failed to initialize AI Service', error);
       this.isInitialized = false;
+
+      // Provide specific error messages based on error type
+      if (error.message.includes('quota')) {
+        logger.error('AI Service quota exceeded. Please check your Google AI Studio billing/quotas.');
+      } else if (error.message.includes('API_KEY')) {
+        logger.error('AI Service API key invalid. Please check your GOOGLE_GEMINI_API_KEY.');
+      } else {
+        logger.error('AI Service initialization failed. Server will continue with fallback responses.');
+      }
+
       // Don't throw error to prevent server crash
       logger.warn('AI Service will be unavailable. Server will continue running without AI features.');
     }
@@ -121,11 +141,13 @@ class AIService {
       });
 
       if (error.message.includes('quota')) {
-        throw new AIServiceError('AI service quota exceeded. Please try again later.');
+        throw new AIServiceError('AI service quota exceeded. Please upgrade your Google AI Studio plan or wait for quota reset. Visit: https://makersuite.google.com/app/apikey');
       } else if (error.message.includes('safety')) {
         throw new AIServiceError('Content was blocked by safety filters. Please rephrase your request.');
       } else if (error.message.includes('network') || error.message.includes('timeout')) {
         throw new AIServiceError('AI service temporarily unavailable. Please try again.');
+      } else if (error.message.includes('API_KEY')) {
+        throw new AIServiceError('Invalid API key. Please check your GOOGLE_GEMINI_API_KEY in .env file.');
       } else {
         throw new AIServiceError('Failed to generate response. Please try again.');
       }

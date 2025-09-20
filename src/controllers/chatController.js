@@ -1,58 +1,43 @@
-import { aiService } from '../../services/aiService.js';
-import { logger } from '../../utils/logger.js';
-import { asyncHandler } from '../../utils/errorHandler.js';
+import { aiService } from "../services/aiService.js";
+import { logger } from "../utils/logger.js";
+import { asyncHandler } from "../utils/errorHandler.js";
 
 export const sendMessage = asyncHandler(async (req, res) => {
   const { prompt } = req.body;
-  const startTime = Date.now();
-
-  logger.info('Processing chat message', {
-    promptLength: prompt.length,
-    ip: req.ip,
-    userAgent: req.get('User-Agent')
-  });
 
   const result = await aiService.generateResponse(prompt);
-  const totalDuration = Date.now() - startTime;
-
-  logger.info('Chat message processed successfully', {
-    totalDuration: `${totalDuration}ms`,
-    aiDuration: result.metadata.duration,
-    responseLength: result.text.length
-  });
 
   res.json({
     success: true,
     data: {
       reply: result.text,
-      metadata: {
-        ...result.metadata,
-        totalProcessingTime: totalDuration
-      }
-    }
+      metadata: result.metadata,
+    },
   });
 });
 
 export const healthCheck = asyncHandler(async (req, res) => {
   const aiHealth = await aiService.healthCheck();
-  
-  const health = {
+
+  const serverMetrics = {
     status: 'healthy',
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    nodeVersion: process.version,
+  };
+
+  const response = {
+    status: aiHealth.status === 'healthy' ? 'healthy' : 'degraded',
     timestamp: new Date().toISOString(),
     services: {
       ai: aiHealth,
-      server: {
-        status: 'healthy',
-        uptime: process.uptime(),
-        memory: process.memoryUsage()
-      }
-    }
+      server: serverMetrics,
+    },
   };
 
-  if (aiHealth.status !== 'healthy') {
-    health.status = 'degraded';
-    res.status(503);
+  if (aiHealth.status === 'healthy') {
+    res.json(response);
+  } else {
+    res.status(503).json(response);
   }
-
-  res.json(health);
 });

@@ -6,7 +6,6 @@ export class AppError extends Error {
     this.statusCode = statusCode;
     this.isOperational = isOperational;
     this.name = this.constructor.name;
-    
     Error.captureStackTrace(this, this.constructor);
   }
 }
@@ -42,11 +41,14 @@ export class AIServiceError extends AppError {
 }
 
 export const errorHandler = (err, req, res, next) => {
-  let error = { ...err };
-  error.message = err.message;
+  const error = err; // preserve prototype to keep instanceof checks
 
-  // Log error
-  logger.error('Error occurred', err, {
+  // Log error with more details
+  logger.error('Error occurred', {
+    error: err,
+    name: err.name,
+    message: err.message,
+    stack: err.stack,
     url: req.url,
     method: req.method,
     ip: req.ip,
@@ -61,15 +63,19 @@ export const errorHandler = (err, req, res, next) => {
   if (error instanceof AppError) {
     message = error.message;
     statusCode = error.statusCode;
+    logger.info('Handled as AppError', { message, statusCode });
   } else if (err.name === 'ValidationError') {
-    message = 'Invalid input data';
+    message = err.message || 'Validation failed';
     statusCode = 400;
+    logger.info('Handled as ValidationError', { message, statusCode });
   } else if (err.name === 'JsonWebTokenError') {
     message = 'Invalid token';
     statusCode = 401;
   } else if (err.name === 'CastError') {
     message = 'Invalid ID format';
     statusCode = 400;
+  } else {
+    logger.warn('Unhandled error type', { errorName: err.name, errorType: typeof err });
   }
 
   // Don't leak error details in production
